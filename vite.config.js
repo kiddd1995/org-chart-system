@@ -2,6 +2,6 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  base: "/mobile-office/",
+  base: "/org-chart-system/",
   plugins: [react()]
 });
