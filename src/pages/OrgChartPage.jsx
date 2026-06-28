@@ -1,10 +1,29 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { OrgChart } from "../components/OrgChart.jsx";
 import { useOrgChartStore } from "../hooks/useOrgChartStore.js";
+import { loadOrgChartFromCloud } from "../services/orgChartCloudStorage";
+import { validateEdges } from "../stores/orgChartStore";
 
 export function OrgChartPage() {
-  const [orgChartData] = useOrgChartStore();
+  const [orgChartData, setOrgChartData] = useOrgChartStore();
   const [selectedSystemId, setSelectedSystemId] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCloudData() {
+      const cloudData = await loadOrgChartFromCloud();
+      if (!isMounted || !cloudData) return;
+
+      setOrgChartData(validateEdges(cloudData));
+    }
+
+    loadCloudData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const selectedSystem = orgChartData.systems.find((system) => system.id === selectedSystemId) || null;
   const chartData = useMemo(() => {

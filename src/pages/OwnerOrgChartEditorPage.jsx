@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Clock3, Download, FileJson, Plus, RotateCcw, Trash2, LockKeyhole, Upload } from "lucide-react";
 import { OrgChart } from "../components/OrgChart.jsx";
 import { useOrgChartStore } from "../hooks/useOrgChartStore.js";
+import { loadOrgChartFromCloud, saveOrgChartToCloud } from "../services/orgChartCloudStorage";
 import {
   defaultOrgChartState,
   getPositionRate,
@@ -118,7 +119,8 @@ export function OwnerOrgChartEditorPage() {
   );
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [orgChartData, setOrgChartData] = useOrgChartStore();
+  const [cloudSaveStatus, setCloudSaveStatus] = useState("尚未儲存");
+  const [orgChartData, setLocalOrgChartData] = useOrgChartStore();
   const [selectedSystemId, setSelectedSystemId] = useState(orgChartData.systems[0]?.id || null);
   const selectedSystem = orgChartData.systems.find((system) => system.id === selectedSystemId) || null;
   const [selectedId, setSelectedId] = useState(selectedSystem?.rootNodeId || null);
@@ -139,6 +141,36 @@ export function OwnerOrgChartEditorPage() {
     () => orgChartData.people.find((person) => person.id === selectedId) || null,
     [orgChartData.people, selectedId]
   );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCloudData() {
+      const cloudData = await loadOrgChartFromCloud();
+      if (!isMounted || !cloudData) return;
+
+      const validatedData = validateEdges(cloudData);
+      setLocalOrgChartData(validatedData);
+      setCloudSaveStatus("已儲存到雲端");
+    }
+
+    loadCloudData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  function setOrgChartData(nextData) {
+    const validatedData = validateEdges(nextData);
+    setLocalOrgChartData(validatedData);
+    setCloudSaveStatus("儲存中");
+
+    saveOrgChartToCloud(validatedData).then((isSaved) => {
+      setCloudSaveStatus(isSaved ? "已儲存到雲端" : "儲存失敗，已保留本機暫存");
+    });
+  }
+
   const chartData = useMemo(() => {
     if (!selectedSystem) {
       const rootIds = new Set(orgChartData.systems.map((system) => system.rootNodeId));
@@ -659,6 +691,9 @@ export function OwnerOrgChartEditorPage() {
           {status}
         </p>
       ) : null}
+      <p className="mb-4 w-fit rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-apple-muted shadow-sm">
+        {cloudSaveStatus}
+      </p>
 
       <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="rounded-[2rem] border border-white/80 bg-white/75 p-4 shadow-soft backdrop-blur-2xl">
