@@ -18,6 +18,8 @@ import {
   saveVersionHistory
 } from "../stores/orgChartVersionStore.js";
 
+const LEADER_AREA_URL = "https://kiddd1995.github.io/mobile-office/#/leader";
+
 function createPersonId(name) {
   const ascii = name.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "");
   return `${ascii || "person"}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
@@ -631,36 +633,52 @@ export function OwnerOrgChartEditorPage() {
 
   if (!isUnlocked) {
     return (
-      <section className="mx-auto max-w-xl py-12">
-        <div className="rounded-[2rem] border border-white/80 bg-white/85 p-8 shadow-soft backdrop-blur-2xl">
-          <div className="grid h-14 w-14 place-items-center rounded-2xl bg-apple-text text-white">
-            <LockKeyhole size={24} />
+      <>
+        <a
+          href={LEADER_AREA_URL}
+          className="flex w-fit items-center rounded-full border border-white/80 bg-white/85 px-4 py-2 text-sm font-semibold text-apple-text shadow-sm transition hover:border-apple-blue hover:text-apple-blue"
+        >
+          ← 返回主管專區
+        </a>
+
+        <section className="mx-auto max-w-xl py-12">
+          <div className="rounded-[2rem] border border-white/80 bg-white/85 p-8 shadow-soft backdrop-blur-2xl">
+            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-apple-text text-white">
+              <LockKeyhole size={24} />
+            </div>
+            <h1 className="mt-6 text-3xl font-semibold tracking-tight">組織圖編輯頁</h1>
+            <form className="mt-6 space-y-4" onSubmit={handleUnlock}>
+              <label className="block text-sm font-medium text-apple-text" htmlFor="owner-password">
+                管理密碼
+              </label>
+              <input
+                id="owner-password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="w-full rounded-2xl border border-apple-line bg-white px-4 py-3 outline-none transition focus:border-apple-blue focus:ring-4 focus:ring-blue-100"
+                placeholder="請輸入管理密碼"
+              />
+              {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+              <button className="w-full rounded-full bg-apple-blue px-5 py-3 text-sm font-semibold text-white" type="submit">
+                進入編輯
+              </button>
+            </form>
           </div>
-          <h1 className="mt-6 text-3xl font-semibold tracking-tight">組織圖編輯頁</h1>
-          <form className="mt-6 space-y-4" onSubmit={handleUnlock}>
-            <label className="block text-sm font-medium text-apple-text" htmlFor="owner-password">
-              管理密碼
-            </label>
-            <input
-              id="owner-password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-2xl border border-apple-line bg-white px-4 py-3 outline-none transition focus:border-apple-blue focus:ring-4 focus:ring-blue-100"
-              placeholder="請輸入管理密碼"
-            />
-            {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
-            <button className="w-full rounded-full bg-apple-blue px-5 py-3 text-sm font-semibold text-white" type="submit">
-              進入編輯
-            </button>
-          </form>
-        </div>
-      </section>
+        </section>
+      </>
     );
   }
 
   return (
     <section className="py-8">
+      <a
+        href={LEADER_AREA_URL}
+        className="mb-4 flex w-fit items-center rounded-full border border-white/80 bg-white/85 px-4 py-2 text-sm font-semibold text-apple-text shadow-sm transition hover:border-apple-blue hover:text-apple-blue"
+      >
+        ← 返回主管專區
+      </a>
+
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-apple-blue">OWNER</p>
