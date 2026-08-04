@@ -138,6 +138,7 @@ export function OwnerOrgChartEditorPage() {
   const [viewport, setViewport] = useState(null);
   const [layoutRepairVersion, setLayoutRepairVersion] = useState(0);
   const [status, setStatus] = useState("");
+  const [cloudSaveError, setCloudSaveError] = useState("");
 
   const selectedPerson = useMemo(
     () => orgChartData.people.find((person) => person.id === selectedId) || null,
@@ -167,10 +168,22 @@ export function OwnerOrgChartEditorPage() {
     const validatedData = validateEdges(nextData);
     setLocalOrgChartData(validatedData);
     setCloudSaveStatus("儲存中");
+    setCloudSaveError("");
 
-    saveOrgChartToCloud(validatedData).then((isSaved) => {
-      setCloudSaveStatus(isSaved ? "已儲存到雲端" : "儲存失敗，已保留本機暫存");
+    saveOrgChartToCloud(validatedData).then((result) => {
+      setCloudSaveStatus(result.ok ? "已儲存到雲端" : "儲存失敗，已保留本機暫存");
+      setCloudSaveError(result.ok ? "" : result.error || "Supabase 未回傳錯誤原因");
     });
+  }
+
+  async function retryCloudSave() {
+    setCloudSaveStatus("重新同步中");
+    setCloudSaveError("");
+
+    const result = await saveOrgChartToCloud(validateEdges(orgChartData));
+    setCloudSaveStatus(result.ok ? "已儲存到雲端" : "儲存失敗，已保留本機暫存");
+    setCloudSaveError(result.ok ? "" : result.error || "Supabase 未回傳錯誤原因");
+    setStatus(result.ok ? "已重新同步到雲端" : "重新同步失敗");
   }
 
   const chartData = useMemo(() => {
@@ -712,6 +725,19 @@ export function OwnerOrgChartEditorPage() {
       <p className="mb-4 w-fit rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-apple-muted shadow-sm">
         {cloudSaveStatus}
       </p>
+      {cloudSaveError ? (
+        <div className="mb-4 flex w-fit max-w-3xl flex-col gap-3 rounded-2xl border border-red-100 bg-red-50/90 px-4 py-3 text-sm font-semibold text-red-700 shadow-sm sm:flex-row sm:items-center">
+          <span>Supabase 錯誤：{cloudSaveError}</span>
+          <button
+            type="button"
+            onClick={retryCloudSave}
+            className="inline-flex w-fit items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-semibold text-red-700 shadow-sm transition hover:bg-red-100"
+          >
+            <Upload size={14} />
+            重新同步到雲端
+          </button>
+        </div>
+      ) : null}
 
       <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="rounded-[2rem] border border-white/80 bg-white/75 p-4 shadow-soft backdrop-blur-2xl">

@@ -5,6 +5,7 @@ import { loadOrgChartFromCloud } from "../services/orgChartCloudStorage";
 import { validateEdges } from "../stores/orgChartStore";
 
 const LEADER_AREA_URL = "https://kiddd1995.github.io/mobile-office/#/leader";
+const CLOUD_SYNC_INTERVAL_MS = 15000;
 
 export function OrgChartPage() {
   const [orgChartData, setOrgChartData] = useOrgChartStore();
@@ -22,8 +23,24 @@ export function OrgChartPage() {
 
     loadCloudData();
 
+    const syncCloudData = () => {
+      loadCloudData();
+    };
+    const syncVisibleCloudData = () => {
+      if (document.visibilityState === "visible") {
+        loadCloudData();
+      }
+    };
+    const syncIntervalId = window.setInterval(syncCloudData, CLOUD_SYNC_INTERVAL_MS);
+
+    window.addEventListener("focus", syncCloudData);
+    document.addEventListener("visibilitychange", syncVisibleCloudData);
+
     return () => {
       isMounted = false;
+      window.clearInterval(syncIntervalId);
+      window.removeEventListener("focus", syncCloudData);
+      document.removeEventListener("visibilitychange", syncVisibleCloudData);
     };
   }, []);
 
