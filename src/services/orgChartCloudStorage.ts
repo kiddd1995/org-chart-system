@@ -58,16 +58,22 @@ export async function saveOrgChartToCloud(data) {
       return { ok: false, error: getErrorMessage(result.error) };
     }
 
-    const updatedAtResult = await supabase
+    const verifyResult = await supabase
       .schema(ORG_CHART_SCHEMA)
       .from(ORG_CHART_TABLE)
       .select("updated_at,data")
       .eq("id", ORG_CHART_ROW_ID)
-      .single();
+      .maybeSingle();
 
-    if (updatedAtResult.error) {
-      console.warn("Failed to verify saved org chart data in Supabase.", updatedAtResult.error);
-      return { ok: false, error: getErrorMessage(updatedAtResult.error) };
+    if (verifyResult.error) {
+      console.warn("Failed to verify saved org chart data in Supabase.", verifyResult.error);
+      return { ok: false, error: getErrorMessage(verifyResult.error) };
+    }
+
+    if (!verifyResult.data) {
+      const message = "No org chart data row was found during Supabase save verification.";
+      console.warn(message);
+      return { ok: false, error: message };
     }
 
     return { ok: true, error: "" };
