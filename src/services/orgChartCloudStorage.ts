@@ -44,19 +44,30 @@ export async function saveOrgChartToCloud(data) {
   }
 
   try {
-    const payload = {
-      data,
-      updated_at: new Date().toISOString()
-    };
-    const { error } = await supabase
+    const result = await supabase
       .schema(ORG_CHART_SCHEMA)
       .from(ORG_CHART_TABLE)
-      .update(payload)
+      .update({
+        data,
+        updated_at: new Date().toISOString()
+      })
       .eq("id", ORG_CHART_ROW_ID);
 
-    if (error) {
-      console.warn("Failed to save org chart data to Supabase.", error);
-      return { ok: false, error: getErrorMessage(error) };
+    if (result.error) {
+      console.warn("Failed to save org chart data to Supabase.", result.error);
+      return { ok: false, error: getErrorMessage(result.error) };
+    }
+
+    const updatedAtResult = await supabase
+      .schema(ORG_CHART_SCHEMA)
+      .from(ORG_CHART_TABLE)
+      .select("updated_at,data")
+      .eq("id", ORG_CHART_ROW_ID)
+      .single();
+
+    if (updatedAtResult.error) {
+      console.warn("Failed to verify saved org chart data in Supabase.", updatedAtResult.error);
+      return { ok: false, error: getErrorMessage(updatedAtResult.error) };
     }
 
     return { ok: true, error: "" };
