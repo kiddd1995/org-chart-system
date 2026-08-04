@@ -1,6 +1,7 @@
 import { isSupabaseConfigured, supabase } from "../lib/supabaseClient";
 
 const ORG_CHART_ROW_ID = "main";
+const ORG_CHART_SCHEMA = "public";
 const ORG_CHART_TABLE = "org_chart_data";
 
 function getErrorMessage(error) {
@@ -17,6 +18,7 @@ export async function loadOrgChartFromCloud() {
 
   try {
     const { data, error } = await supabase
+      .schema(ORG_CHART_SCHEMA)
       .from(ORG_CHART_TABLE)
       .select("data")
       .eq("id", ORG_CHART_ROW_ID)
@@ -46,21 +48,15 @@ export async function saveOrgChartToCloud(data) {
       data,
       updated_at: new Date().toISOString()
     };
-    const { data: updatedRows, error } = await supabase
+    const { error } = await supabase
+      .schema(ORG_CHART_SCHEMA)
       .from(ORG_CHART_TABLE)
       .update(payload)
-      .eq("id", ORG_CHART_ROW_ID)
-      .select("id");
+      .eq("id", ORG_CHART_ROW_ID);
 
     if (error) {
       console.warn("Failed to save org chart data to Supabase.", error);
       return { ok: false, error: getErrorMessage(error) };
-    }
-
-    if (!updatedRows?.length) {
-      const message = "No org chart data row was updated in Supabase.";
-      console.warn(message);
-      return { ok: false, error: message };
     }
 
     return { ok: true, error: "" };
